@@ -1,0 +1,29 @@
+{
+  "defaults": {
+    "NS": "nebulaiq-telemetry",
+    "DOCKER_REGISTRY": "nebulaiqdemo.azurecr.io"
+  },
+  "installers": {
+    "mysql": {
+      "INSTALL_TYPE": "helm",
+      "CHART_PATH": "bitnami/mysql",
+      "RELEASE_NAME": "mysql",
+      "VALUES": "{{ PROJECT_NAME }}/mysql-values.yaml",
+      "NS": "nebulaiq-telemetry"
+    },
+    "redis": {
+      "INSTALL_TYPE": "helm",
+      "CHART_PATH": "bitnami/redis",
+      "RELEASE_NAME": "redis",
+      "VALUES": "{{ PROJECT_NAME }}/redis-values.yaml",
+      "NS": "nebulaiq-telemetry"
+    },
+    "grafana": {
+      "INSTALL_TYPE": "helm",
+      "CHART_PATH": "grafana/grafana",
+      "RELEASE_NAME": "grafana",
+      "VALUES": "{{ PROJECT_NAME }}/grafana-values.yaml",
+      "NS": "nebulaiq-telemetry"
+    }
+  }
+} 
