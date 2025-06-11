@@ -1,0 +1,20 @@
+{
+  "defaults": {
+    "NS": "swiggy-dog-fooding",
+    "DOCKER_REGISTRY": "swiggy.azurecr.io"
+  },
+  "installers": {
+    "helm": {
+      "INSTALL_TYPE": "helm",
+      "RELEASE_NAME": "swiggy-helm-release",
+      "CHART_PATH": "bitnami/nginx",
+      "VALUES": "swiggy_dog_fooding/helm-values.yaml"
+    },
+    "redis": {
+      "INSTALL_TYPE": "helm",
+      "RELEASE_NAME": "swiggy-redis",
+      "CHART_PATH": "bitnami/redis",
+      "VALUES": "swiggy_dog_fooding/redis-values.yaml"
+    }
+  }
+} 
