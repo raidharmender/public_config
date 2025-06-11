@@ -1,41 +1,29 @@
 {
-  "COMPONENTS_JSON_FILE": "install/components.json",
-  "CREDENTIALS_FILE": ".nebulaiq/credentials.toml",
-  "BASE_CONFIG_FILE": "base_install_config.json",
-  "PROJECT_CONFIG_SUFFIX": "_install_config.json",
-  "DEFAULT_NAMESPACE": "nebulaiq-telemetry",
-  "DEFAULT_DOCKER_REGISTRY": "nebulaiqdemo.azurecr.io",
-  "DEFAULT_SECRET_NAME": "nebulaiq-acr-secret",
-  "DEFAULT_STORAGE_CLASS": "niq-sc",
-  "HELM_REPOS": [
-    {"name": "bitnami", "url": "https://charts.bitnami.com/bitnami"},
-    {"name": "coroot", "url": "https://coroot.github.io/helm-charts"},
-    {"name": "eks", "url": "https://aws.github.io/eks-charts"},
-    {"name": "jetstack", "url": "https://charts.jetstack.io"},
-    {"name": "redpanda", "url": "https://charts.redpanda.com"},
-    {"name": "quickwit", "url": "https://helm.quickwit.io"}
-  ],
-  "SETUP_COMPONENTS": ["s3", "kyverno", "niq-secret", "redpanda", "coroot", "quickwit"],
-  "DEPENDENCY_COMPONENTS": ["redis", "mysql", "clickhouse", "postgres", "redpanda", "quickwit", "niq-cli"],
-  "RESOURCE_COMPONENTS": ["mysql", "postgres", "clickhouse", "redpanda", "quickwit"],
-  "NIQ_COMPONENTS": [
-    "agg-service/flog-consumer",
-    "agg-service/flog-merger",
-    "agg-service/root-expiry",
-    "agg-service/service-graph",
-    "internal-log-collector",
-    "server",
-    "grafana"
-  ],
-  "AGENT_COMPONENTS": ["agent", "coroot"],
-  "SETUP_SCRIPT": "setup.sh",
-  "NIQ_SETUP_SCRIPT": "new_niq-setup.sh",
-  "POST_INSTALL_SCRIPT": "post-install.sh",
-  "STORAGE_CLASS_SCRIPT": "storage-class/create-sc.sh",
-  "HOME_ENV_VAR": "HOME",
-  "DOCKER_USERNAME_ENV": "DOCKER_USERNAME",
-  "DOCKER_PASSWORD_ENV": "DOCKER_PASSWORD",
-  "DOCKER_REGISTRY_ENV": "DOCKER_REGISTRY",
-  "NEBULAIQ_NAMESPACE_ENV": "NEBULAIQ_NAMESPACE",
-  "SECRET_NAME_ENV": "SECRET_NAME"
+  "defaults": {
+    "NS": "nebulaiq-telemetry",
+    "DOCKER_REGISTRY": "nebulaiqdemo.azurecr.io"
+  },
+  "installers": {
+    "mysql": {
+      "INSTALL_TYPE": "helm",
+      "CHART_PATH": "bitnami/mysql",
+      "RELEASE_NAME": "mysql",
+      "VALUES": "{{ PROJECT_NAME }}/mysql-values.yaml",
+      "NS": "nebulaiq-telemetry"
+    },
+    "redis": {
+      "INSTALL_TYPE": "helm",
+      "CHART_PATH": "bitnami/redis",
+      "RELEASE_NAME": "redis",
+      "VALUES": "{{ PROJECT_NAME }}/redis-values.yaml",
+      "NS": "nebulaiq-telemetry"
+    },
+    "grafana": {
+      "INSTALL_TYPE": "helm",
+      "CHART_PATH": "grafana/grafana",
+      "RELEASE_NAME": "grafana",
+      "VALUES": "{{ PROJECT_NAME }}/grafana-values.yaml",
+      "NS": "nebulaiq-telemetry"
+    }
+  }
 } 
