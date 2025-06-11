@@ -1,0 +1,30 @@
+# MySQL values for NIQ project
+# Based on Bitnami MySQL chart configuration
+
+global:
+  storageClass: "niq-sc"
+  imageRegistry: "nebulaiqdemo.azurecr.io"
+
+primary:
+  enabled: true
+  persistence:
+    enabled: true
+    storageClass: "niq-sc"
+    size: 8Gi
+    accessModes:
+      - ReadWriteOnce
+  auth:
+    rootPassword: "niq_root_password_123"
+    database: "niq"
+    username: "niq_user"
+    password: "niq_user_password_123"
+  service:
+    type: ClusterIP
+    port: 3306
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi 

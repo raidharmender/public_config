@@ -1,0 +1,14 @@
+# Helm values for NIQ project
+# Nginx ingress controller example
+
+controller:
+  replicaCount: 2
+  service:
+    type: LoadBalancer
+    ports:
+      http: 80
+      https: 443
+  ingressClassResource:
+    name: nginx
+    enabled: true
+    default: true 

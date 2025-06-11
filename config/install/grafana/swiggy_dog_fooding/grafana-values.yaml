@@ -1,0 +1,181 @@
+# Grafana values for swiggy_dog_fooding project
+# Based on Grafana chart configuration
+
+# Global configuration
+global:
+  storageClass: "niq-sc"
+  imageRegistry: "nebulaiqdemo.azurecr.io"
+
+# Grafana configuration
+grafana:
+  enabled: true
+  
+  # Admin user configuration
+  adminUser: "admin"
+  adminPassword: "swiggy_grafana_admin_123"
+  
+  # Persistence
+  persistence:
+    enabled: true
+    storageClassName: "niq-sc"
+    size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  
+  # Ingress configuration
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+    hosts:
+      - host: grafana.swiggy-dog-fooding.local
+        paths:
+          - path: /
+            pathType: Prefix
+  
+  # Resources
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  
+  # Security context
+  securityContext:
+    enabled: true
+    runAsUser: 472
+    fsGroup: 472
+  
+  # Container security context
+  containerSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    runAsUser: 472
+  
+  # Configuration
+  config:
+    # Server configuration
+    server:
+      http_port: 3000
+      domain: grafana.swiggy-dog-fooding.local
+      root_url: http://grafana.swiggy-dog-fooding.local/
+    
+    # Security configuration
+    security:
+      admin_user: admin
+      admin_password: swiggy_grafana_admin_123
+      allow_embedding: true
+      cookie_secure: false
+    
+    # Database configuration (using SQLite for simplicity)
+    database:
+      type: sqlite3
+      path: /var/lib/grafana/grafana.db
+    
+    # Logging configuration
+    log:
+      mode: console
+      level: info
+    
+    # Analytics configuration
+    analytics:
+      reporting_enabled: false
+      check_for_updates: false
+    
+    # Users configuration
+    users:
+      allow_sign_up: false
+      allow_org_create: false
+      auto_assign_org: true
+      auto_assign_org_role: Viewer
+    
+    # SMTP configuration (disabled)
+    smtp:
+      enabled: false
+    
+    # Unified alerting configuration
+    unified_alerting:
+      enabled: true
+    
+    # Feature toggles
+    feature_toggles:
+      enable: []
+    
+    # Plugin configuration
+    plugins:
+      allow_loading_unsigned_plugins: []
+    
+    # Paths configuration
+    paths:
+      data: /var/lib/grafana
+      logs: /var/log/grafana
+      plugins: /var/lib/grafana/plugins
+      provisioning: /etc/grafana/provisioning
+
+# Service account
+serviceAccount:
+  create: true
+  name: "grafana-service-account"
+
+# Pod security context
+podSecurityContext:
+  enabled: true
+  fsGroup: 472
+
+# Pod annotations
+podAnnotations:
+  project: "swiggy_dog_fooding"
+  environment: "dog-fooding"
+
+# Pod labels
+podLabels:
+  app: "grafana"
+  project: "swiggy_dog_fooding"
+  environment: "dog-fooding"
+
+# Node selector (optional)
+nodeSelector: {}
+
+# Tolerations (optional)
+tolerations: []
+
+# Affinity (optional)
+affinity: {}
+
+# Sidecar configuration
+sidecar:
+  enabled: true
+  image:
+    repository: kiwigrid/k8s-sidecar
+    tag: "1.24.6"
+  
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  
+  # Dashboard configuration
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    labelValue: "1"
+    searchNamespace: ALL
+  
+  # Datasource configuration
+  datasources:
+    enabled: true
+    label: grafana_datasource
+    labelValue: "1"
+    searchNamespace: ALL 

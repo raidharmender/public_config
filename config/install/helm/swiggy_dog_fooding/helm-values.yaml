@@ -1,0 +1,38 @@
+# Helm values for swiggy_dog_fooding project
+namespace: swiggy-dog-fooding
+releaseName: swiggy-helm-release
+
+# Chart specific values
+image:
+  repository: swiggy.azurecr.io/helm-chart
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Environment variables
+env:
+  - name: PROJECT_NAME
+    value: "swiggy_dog_fooding"
+  - name: ENVIRONMENT
+    value: "dog-fooding"
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: swiggy-dog-fooding.local
+      paths:
+        - path: /
+          pathType: Prefix 
