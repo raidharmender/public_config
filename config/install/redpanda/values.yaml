@@ -1,0 +1,46 @@
+apiVersion: cluster.redpanda.com/v1alpha1
+kind: Redpanda
+metadata:
+  name: redpanda
+spec:
+  chartRef:
+    chartVersion: 5.9.18
+  clusterSpec:
+    nodeSelector: {{ NODE_SELECTOR }}
+    tolerations: {{ TOLERATIONS }}
+    force: true
+    commonLabels:
+      app: redpanda
+      karpenter.sh/do-not-disrupt: "true"
+      karpenter.sh/do-not-evict: "true"
+    resources: {{ RESOURCES }}
+    auth:
+      sasl:
+        enabled: false
+    statefulset:
+      replicas: {{ REPLICAS }}
+      podTemplate:
+        annotations:
+          karpenter.sh/do-not-disrupt: "true"
+          karpenter.sh/do-not-evict: "true"
+    listeners:
+      kafka:
+        tls:
+          enabled: false
+        external:
+          default:
+            tls:
+              enabled: false
+      admin:
+        port: 9644
+        external:
+          default:
+            tls:
+              enabled: false
+        tls:
+          enabled: false
+    storage:
+      persistentVolume:
+        enabled: true
+        storageClass: {{ STORAGE_CLASS }}
+        size: {{ STORAGE_SIZE }}

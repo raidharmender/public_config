@@ -1,0 +1,47 @@
+# kubectl apply -f service-graph/deployment.yaml -n nebulaiq-telemetry
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agg-service-service-graph
+spec:
+  replicas: {{ REPLICAS }}
+  selector:
+    matchLabels:
+      app: agg-service-service-graph
+  template:
+    metadata:
+      labels:
+        app: agg-service-service-graph
+    spec:
+      nodeSelector: {{ NODE_SELECTOR }}
+      tolerations: {{ TOLERATIONS }}
+      containers:
+        - name: agg-service-service-graph
+          image: nebulaiqdemo.azurecr.io/nebulaiq-telemetry-agg-service-service-graph:{{ IMAGE_VERSION }}
+          imagePullPolicy: Always
+          resources: {{ RESOURCES }}
+          env:
+            - name: KAFKA_BROKERS
+              value: {{ REDPANDA_SERVICE }}
+            - name: KAFKA_TOPIC
+              value: "nebulaiq-service-graph"
+            - name: KAFKA_CONSUMER_GROUP_ID
+              value: {{ KAFKA_CONSUMER_GROUP_ID }}
+            - name: SG_CH_WRITER_HOST
+              value: "niq-clickhouse.nebulaiq-telemetry.svc.cluster.local"
+            - name: SG_CH_CLUSTER
+              value: "default"
+            - name: SG_CH_WRITER_DATABASE
+              value: "flow_log"
+            - name: SG_CH_WRITER_USER
+              value: "default"
+            - name: SG_CH_WRITER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-passwords-secret
+                  key: CLICKHOUSE_PASSWORD
+            - name: SG_CH_WRITER_TABLE
+              value: "service_graph"
+      imagePullSecrets:
+        - name: nebulaiq-acr-secret

@@ -1,0 +1,24 @@
+image:
+  repository: ghcr.io/coroot/coroot-node-agent
+  pullPolicy: IfNotPresent
+  tag: ""
+
+nameOverride: ""
+fullnameOverride: "nebulaiq-node-agent"
+
+resources: {{ RESOURCES }}
+
+port: 80
+
+metricsEndpoint: "http://nebulaiq-telemetry-agent.nebulaiq-telemetry.svc.cluster.local:38086/api/v1/prometheus"
+scrapeInterval: "60s"
+
+env:
+  - name: DISABLE_LOG_PARSING
+    value: "true"
+  - name: DISABLE_PINGER
+    value: "true"
+  - name: DISABLE_L7_TRACING
+    value: "false"
+  - name: GOMEMLIMIT
+    value: "130MiB"

@@ -1,0 +1,41 @@
+# kubectl apply -f root-expiry/deployment.yaml -n nebulaiq-telemetry
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agg-service-root-expiry
+spec:
+  replicas: {{ REPLICAS }}
+  selector:
+    matchLabels:
+      app: agg-service-root-expiry
+  template:
+    metadata:
+      labels:
+        app: agg-service-root-expiry
+    spec:
+      nodeSelector: {{ NODE_SELECTOR }}
+      tolerations: {{ TOLERATIONS }}
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: agg-service-root-expiry
+          image: nebulaiqdemo.azurecr.io/nebulaiq-telemetry-agg-service-root-expiry:{{ IMAGE_VERSION }}
+          imagePullPolicy: Always
+          resources: {{ RESOURCES }}
+          env:
+            - name: REDIS_SEED_NODES
+              value: {{ FLOG_REDIS_SERVICE }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-passwords-secret
+                  key: REDIS_PASSWORD
+            - name: KAFKA_BROKERS
+              value: {{ REDPANDA_SERVICE }}
+            - name: KAFKA_TOPIC
+              value: "flog-expired-root"
+            - name: ROOT_EXPIRY_QUEUE_SHARDS
+              value: "40"
+      imagePullSecrets:
+        - name: nebulaiq-acr-secret
+

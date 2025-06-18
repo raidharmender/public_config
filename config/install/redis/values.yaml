@@ -1,0 +1,57 @@
+existingSecret: redis-passwords-secret
+existingSecretPasswordKey: REDIS_PASSWORD
+
+commonAnnotations:
+  karpenter.sh/do-not-disrupt: "true"
+  karpenter.sh/do-not-evict: "true"
+
+commonLabels:
+  app: niq-redis
+  karpenter.sh/do-not-disrupt: "true"
+  karpenter.sh/do-not-evict: "true"
+
+service:
+  type: ClusterIP
+#  annotations: []
+
+persistence:
+  enabled: true
+  storageClass: {{ STORAGE_CLASS }}
+  size: {{ STORAGE_SIZE }}
+
+cluster:
+  nodes: {{ NODES }}
+  replicas: {{ REPLICAS }}
+
+redis:
+  nodeSelector: {{ NODE_SELECTOR }}
+  tolerations: {{ TOLERATIONS }}
+  resources: {{ RESOURCES }}
+
+  podAnnotations:
+    karpenter.sh/do-not-disrupt: "true"
+
+  #  resourcesPreset: "large"
+  useAOFPersistence: "no"
+  configmap: |
+    maxmemory-policy volatile-ttl
+    maxmemory 3GB
+    save ""
+    appendonly no
+    stop-writes-on-bgsave-error no
+
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5

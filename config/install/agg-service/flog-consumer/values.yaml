@@ -1,0 +1,80 @@
+# kubectl apply -f flog-consumer/deployment.yaml -n nebulaiq-telemetry
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agg-service-flog-consumer
+spec:
+  replicas: {{ REPLICAS }}
+  selector:
+    matchLabels:
+      app: agg-service-flog-consumer
+  template:
+    metadata:
+      labels:
+        app: agg-service-flog-consumer
+    spec:
+      nodeSelector: {{ NODE_SELECTOR }}
+      tolerations: {{ TOLERATIONS }}
+      containers:
+        - name: agg-service-flog-consumer
+          image: nebulaiqdemo.azurecr.io/nebulaiq-telemetry-agg-service-flog-consumer:{{ IMAGE_VERSION }}
+          imagePullPolicy: Always
+          resources: {{ RESOURCES }}
+          env:
+            - name: REDIS_SEED_NODES
+              value: {{ FLOG_REDIS_SERVICE }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-passwords-secret
+                  key: REDIS_PASSWORD
+
+            - name: KAFKA_BROKERS
+              value: {{ REDPANDA_SERVICE }}
+            - name: KAFKA_TOPIC
+              value: "nebulaiq-l7-flog-v2"
+            - name: KAFKA_CONSUMER_GROUP_ID
+              value: "{{ KAFKA_CONSUMER_GROUP_ID }}"
+            - name: KAFKA_NUM_WORKERS
+              value: "{{ KAFKA_NUM_WORKERS }}"
+            - name: ENRICHER_MAX_CONCURRENT_TASKS
+              value: "3000"
+            - name: KAFKA_MIN_QUEUE
+              value: "200"
+            - name: KAFKA_MIN_QUEUE_BYTES
+              value: "65536"
+            - name: CH_WRITER_URL
+              value: "http://niq-clickhouse.nebulaiq-telemetry.svc.cluster.local:8123"
+            - name: CH_CLUSTER
+              value: "default"
+            - name: CH_WRITER_DB
+              value: "flow_log"
+            - name: CH_WRITER_USER
+              value: "default"
+            - name: CH_WRITER_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: db-passwords-secret
+                  key: CLICKHOUSE_PASSWORD
+            - name: CH_WRITER_FLOW_LOG_TABLE
+              value: "l7_flow_log_merged_parent_local"
+            - name: CH_HTTP_PORT
+              value: "8123"
+            - name: CH_WRITER_SHARDS_MULTIPLIER
+              value: "1"
+            - name: CH_WRITER_INSERTER_MAX_ENTRIES
+              value: "2000"
+            - name: NAMESPACES_TO_IGNORE
+              value: ""
+            - name: ROOT_EXPIRY_QUEUE_SHARDS
+              value: "40"
+            - name: CH_WRITER_SHARD_BUFFER_SIZE
+              value: "{{ CH_WRITER_SHARD_BUFFER_SIZE }}"
+            - name: ADAPTIVE_EXPIRY
+              value: "true"
+
+            - name: IS_FILTERED_EVENTS_ENABLED
+              value: "{{ IS_FILTERED_EVENTS_ENABLED }}"
+      imagePullSecrets:
+        - name: nebulaiq-acr-secret

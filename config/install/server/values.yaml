@@ -1,0 +1,117 @@
+imagePullSecrets:
+  - name: nebulaiq-acr-secret
+
+global:
+  pullPolicy: Always
+  image:
+    imagePullSecrets:
+      - name: nebulaiq-acr-secret
+  #  timezone: Asia/Kolkata
+  env:
+    GOGC: {{ GOGC }}
+    GOMEMLIMIT: {{ GOMEMLIMIT }}
+    DEPLOYMENT_TIME: {{ DEPLOYMENT_TIME }}
+  clickhouse:
+    external: true
+    serviceAddr: "niq-clickhouse.nebulaiq-telemetry"
+    hosts: {{ CLICKHOUSE_HOSTS }}
+    clusterName: default
+  mysql:
+    ip: "niq-mysql.nebulaiq-telemetry.svc.cluster.local"
+    database: {{ SERVER_MYSQL_DATABASE }}
+    port: 3306
+    username: nebulaiq
+  grafanaDashboards:
+    tag: v0.10
+
+image:
+  server:
+    tag: {{ SERVER_IMAGE_VERSION }}
+
+server:
+  replicas: {{ REPLICAS }}
+  resources: {{ RESOURCES }}
+  service:
+    annotations: {{ SERVICE_ANNOTATIONS }}
+    type: {{ SERVICE_TYPE }}
+  headlessService:
+    enabled: {{ ENABLE_HEADLESS_SERVICE }}
+    annotations: {{ HEADLESS_SERVICE_ANNOTATIONS }}
+  nodeSelector: {{ NODE_SELECTOR }}
+
+tolerations: {{ TOLERATIONS }}
+
+configmap:
+  server.yaml:
+    # log-level: "debug/info/warn/error"
+    log-level: {{ LOG_LEVEL }}
+    controller:
+      manager:
+        task:
+          recorder:
+            cache_refresh_interval: 60
+            deleted_resource_clean_interval: 24
+            deleted_resource_retention_time: 168
+            resource_max_id_0: 640000
+            resource_max_id_1: 640000
+      trisolaris:
+        server-cache-redis-cluster-url: "niq-redis-redis-cluster.nebulaiq-telemetry.svc.cluster.local:6379"
+        upgrade-rate-limit:
+          max-rate: 20
+          expire-after: 30s
+
+#            log_debug:
+#              enabled: false
+#              detail_enabled: false
+#              resource_type:
+#                - pod_node
+    ingester:
+      qw-syslog: true
+      qw-svc-addr: niq-log-svc-indexer.nebulaiq-telemetry.svc.cluster.local:7280
+      application-log-qw-writer:
+        svc-addr: niq-log-svc-indexer.nebulaiq-telemetry.svc.cluster.local:7280
+        use-v2: false
+        max-batch-size: 100
+        max-batch-byte-size: 1048576
+        channel-buffer-size: 10000
+
+      # log-level: {{ LOG_LEVEL }}
+      # es-syslog: true
+      # es-host-port:
+      #  - http://nebulaiq-logs-es-http.nebulaiq-telemetry.svc.cluster.local:9200
+      # es-auth:
+      #  user: elastic
+      #  password: p806I3dHVYNA4xA52C7x26sX
+      trace-correlation-priority:
+        - x-request-id
+        - tcp_id
+      ck-disk-monitor:
+        check-interval: 600
+        disk-cleanups:
+          - disk-name-prefix: default
+            used-percent: 20
+            free-space: 500
+      l7-flowlog-kafka-producer:
+        enabled: true
+        brokers: {{ REDPANDA_BROKERS }}
+        topic: nebulaiq-l7-flog-v2
+        producer-queue-len: 5000
+        delivery-queue-len: 5000
+      fact-store-config:
+        enabled: true
+        meta-postgres:
+          user: niq_user
+          password: telemetry69
+          host: postgres.nebulaiq-telemetry.svc.cluster.local
+          port: 5432
+          database: niq_fact_store_meta
+        agg-event-kafka:
+          brokers: {{ REDPANDA_BROKERS }}
+          total-partitions: {{ FACT_STORE_AGG_INPUT_TOPIC_PARTITIONS }}
+          topic: niq_fact_store_flow_metric_input
+          producer-queue-len: 5000
+          delivery-queue-len: 5000
+      integration:
+        common-labels: ["display_container_name","container_id","container_name","container_runtime_version","pod_name","pod_phase","namespace","node","phase","dns_pod","persistentvolume","persistentvolumeclaim","poddisruptionbudget","secret","service_kind","storageclass","kube_app_component","kube_app_instance","kube_app_managed_by","kube_app_name","kube_app_version","kube_daemon_set","kube_endpoint","kube_priority_class","kube_stateful_set","kube_namespace","kube_deployment","kube_service","kube_container_name","kube_node","kube_replica_set","kube_ownerref_kind","kube_ownerref_name","kube_qos","kube_cluster_name","kube_job","image_id","image_name","image_tag","short_image","goversion","kubelet_version","os_image","zone","zones","job","interface","proxy_name","runtime","condition","uid","key","git_commit_sha","git_repository_url","helm_chart","iface","platform_data","plugin","toleration_seconds","quantile","effect","operator","issuer_group", "issuer_kind","issuer_name", "kernel_version", "kube_region","kube_zone","unit"]
+
+

@@ -1,0 +1,18 @@
+image:
+  tag: {{ VERSION }}
+
+imagePullSecrets:
+  - name: nebulaiq-acr-secret
+
+controllerAddr: nebulaiq-telemetry-server
+remoteLoggerAddr: internal-log-coll-svc
+
+nebulaiqTelemetryK8sClusterID: {{ K8_CLUSTER_ID }}
+agentGroupID: {{ AGENT_GROUP_ID }}
+clusterNAME: {{ CLUSTER_NAME }}
+#controllerPort:
+#ingestPort: 20033
+
+resources: {{ RESOURCES }}
+
+tolerations: {{ TOLERATIONS }}

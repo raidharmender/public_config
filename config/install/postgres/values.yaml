@@ -1,0 +1,97 @@
+#apiVersion: v1
+#kind: ConfigMap
+#metadata:
+#  name: postgres-secret
+#  labels:
+#    app: postgres
+#data:
+#  POSTGRES_DB: "niq_data"
+#  POSTGRES_USER: "niq_user"
+#  POSTGRES_PASSWORD: "telemetry69"
+#---
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: postgres-volume-claim
+#  labels:
+#    app: postgres
+#spec:
+#  storageClassName: {{ STORAGE_CLASS }}
+#  accessModes:
+#    - ReadWriteOnce
+#  resources:
+#    requests:
+#      storage: {{ STORAGE_SIZE }}
+#---
+#apiVersion: v1
+#kind: ConfigMap
+#metadata:
+#  name: postgres-config
+#  labels:
+#    app: postgres
+#data:
+#  postgresql.conf: |
+#    listen_addresses = '*'
+#  pg_hba.conf: |
+#    # TYPE  DATABASE        USER            ADDRESS                 METHOD
+#    host    all             all             0.0.0.0/0               md5
+#---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      nodeSelector: {{ NODE_SELECTOR }}
+      tolerations: {{ TOLERATIONS }}
+      containers:
+        - name: postgres
+          image: 'postgres:14'
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-secret
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data/pgdata # Adjusted mount path
+              name: postgresdata
+              subPath: pgdata # Use subPath to avoid root directory issues
+            - name: postgres-config-volume
+              mountPath: /etc/postgresql/postgresql.conf
+              subPath: postgresql.conf
+            - name: postgres-config-volume
+              mountPath: /etc/postgresql/pg_hba.conf
+              subPath: pg_hba.conf
+          resources: {{ RESOURCES }}
+      volumes:
+        - name: postgresdata
+          persistentVolumeClaim:
+            claimName: postgres-volume-claim
+        - name: postgres-config-volume
+          configMap:
+            name: postgres-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+  selector:
+    app: postgres

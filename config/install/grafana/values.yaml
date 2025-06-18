@@ -1,0 +1,30 @@
+global:
+  imagePullSecrets:
+    - nebulaiq-acr-secret
+  #  timezone: Asia/Kolkata
+  querierUrl: "http://nebulaiq-telemetry-server.nebulaiq-telemetry:20416"
+  clickhouse:
+    serviceAddr: "niq-clickhouse.nebulaiq-telemetry"
+    clusterName: default
+  mysql:
+    ip: "niq-mysql.nebulaiq-telemetry.svc.cluster.local"
+    database: {{ GRAFANA_MYSQL_DATABASE }}
+    port: 3306
+    username: grafana
+  grafanaPlugins:
+    tag: {{ PLUGINS_IMAGE_VERSION }}
+
+headlessService:
+  enabled: {{ ENABLE_HEADLESS_SERVICE }}
+  annotations: {{ HEADLESS_SERVICE_ANNOTATIONS }}
+
+grafana:
+  replicas: 1
+  resources: {{ RESOURCES }}
+  service:
+    annotations: {{ SERVICE_ANNOTATIONS }}
+    type: {{ SERVICE_TYPE }}
+    nodePort: {{ NODE_PORT }}
+  nodeSelector: {{ NODE_SELECTOR }}
+  tolerations: {{ TOLERATIONS }}
+  grafana.ini: {{ GRAFANA_INI }}

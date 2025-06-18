@@ -1,0 +1,218 @@
+image:
+  repository: quickwit/quickwit
+  pullPolicy: IfNotPresent
+  # tag: v0.8.1
+
+imagePullSecrets: [ ]
+nameOverride: {{ RELEASE_NAME }}
+fullnameOverride: {{ RELEASE_NAME }}
+
+# -- Additional labels to add to all resources
+additionalLabels:
+  app: {{ RELEASE_NAME }}
+  karpenter.sh/do-not-disrupt: "true"
+  karpenter.sh/do-not-evict: "true"
+
+podAnnotations:
+  karpenter.sh/do-not-disrupt: "true"
+  karpenter.sh/do-not-evict: "true"
+
+tolerations: {{ TOLERATIONS }}
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: { }
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: {{ SERVICE_ACCOUNT }}
+
+searcher:
+  nodeSelector: {{ NODE_SELECTOR }}
+  replicaCount: {{ SEARCHER_REPLICAS }}
+
+  resources: {{ SEARCHER_RESOURCES }}
+
+  persistentVolume:
+    enabled: true
+    storage: {{ SEARCHER_STORAGE_SIZE }}
+    storageClass: {{ STORAGE_CLASS }}
+
+indexer:
+  nodeSelector: {{ NODE_SELECTOR }}
+  replicaCount: {{ INDEXER_REPLICAS }}
+
+  resources: {{ INDEXER_RESOURCES }}
+
+  persistentVolume:
+    enabled: true
+    storage: {{ INDEXER_STORAGE_SIZE }}
+    storageClass: {{ STORAGE_CLASS }}
+
+metastore:
+  nodeSelector: {{ NODE_SELECTOR }}
+  replicaCount: {{ METASTORE_REPLICAS }}
+
+  resources: {{ METASTORE_RESOURCES }}
+
+control_plane:
+  resources: {{ CONTROL_PLANE_RESOURCES }}
+  nodeSelector: {{ NODE_SELECTOR }}
+
+janitor:
+  # Enable Janitor service
+  enabled: true
+  nodeSelector: {{ NODE_SELECTOR }}
+
+# Deploy jobs to bootstrap creation of indexes and sources for quickwit clusters
+bootstrap:
+  # Enable bootstrap jobs
+  enabled: false
+
+  resources: { }
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+  sources:
+    # Override command for starting container
+    command: [ ]
+
+    # initContainers -- Init containers to be executed before the source creation.
+    initContainers: [ ]
+
+    # extraVolumes -- Additional volumes to use with bootstrap Pods.
+    extraVolumes: [ ]
+
+    # extraVolumeMounts -- Additional volumes to mount into bootstrap containers (not the init containers).
+    extraVolumeMounts: [ ]
+
+  indexes:
+    # initContainers -- Init containers to be executed before the index creation.
+    initContainers: [ ]
+
+    # extraVolumes -- Additional volumes to use with bootstrap Pods.
+    extraVolumes: [ ]
+
+    # extraVolumeMounts -- Additional volumes to mount into bootstrap containers (not the init containers).
+    extraVolumeMounts: [ ]
+
+# Quickwit configuration
+# Warning: This config is writed directly into a configMap
+# to avoid passing sensitive value you can pass environment variables.
+# https://quickwit.io/docs/configuration/node-config#using-environment-variables-in-the-configuration
+configLocation: /quickwit/node.yaml
+
+config:
+  version: 0.8
+  cluster_id: niq_log_svc_cluster
+  listen_address: 0.0.0.0
+  gossip_listen_port: 7282
+  data_dir: /quickwit/qwdata
+  default_index_root_uri: "s3://{{ S3_BUCKET }}/niq-log-svc/indexes"
+  metastore_uri: "postgres://niq_user:telemetry69@postgres.nebulaiq-telemetry.svc.cluster.local:5432/niq_data"
+  metastore:
+    postgres:
+      max_num_connections: 10
+
+  storage:
+    s3:
+      # endpoint: "http://custom-s3-endpoint"
+      region: {{ S3_REGION }}
+      # We recommend using IAM roles and permissions to access Amazon S3 resources,
+      # but you can specify a pair of access and secret keys if necessary.
+      # access_key_id: <my access key>
+      # secret_access_key: AWS_ACCESS_KEY_ID
+  # azure:
+  # account: "<my account name>"
+  # access_key: QW_AZURE_STORAGE_ACCESS_KEY
+
+  # Indexer settings
+  # indexer:
+  #   split_store_max_num_bytes: 200G
+  #   split_store_max_num_splits: 10000
+  # Ingest API settings
+  # ingest_api:
+  #   max_queue_memory_usage: 2GiB
+  #   max_queue_disk_usage: 4GiB
+  # searcher settings
+  searcher:
+    fast_field_cache_capacity: 8G
+    split_footer_cache_capacity: 1G
+    # max_num_concurrent_split_streams: 100
+
+# Seed configuration
+seed:
+  indexes: [ ]
+    # - version: 0.8
+    #   index_id: my-index
+    #   doc_mapping:
+    #     field_mappings:
+    #       - name: timestamp
+    #         type: datetime
+    #         fast: true
+    #         input_formats:
+    #           - unix_timestamp
+    #         output_format: unix_timestamp_secs
+    #       - name: body
+    #         type: text
+    #     timestamp_field: timestamp
+    #   search_settings:
+  #     default_search_fields: [body]
+  #   indexing_settings:
+  #     merge_policy:
+  #       type: limit_merge
+  #       max_merge_ops: 3
+  #       merge_factor: 10
+  #       max_merge_factor: 12
+
+  sources: [ ]
+    # - index: my-index
+    #   source:
+    #     version: 0.8
+  #     source_id: my-source
+  #     source_type: kafka
+  #     num_pipelines: 1
+  #     params:
+  #       topic: quickwit-topic
+  #       client_params:
+  #         bootstrap.servers: kafka-server-endpoint1:9092,kafka-server-endpoint2:9092
+
+# Prometheus metrics
+serviceMonitor:
+  enabled: false
+  # -- Additional labels to add to monitoring resources
+  additionalLabels: { }
+  interval: 60s
+  scrapeTimeout: 10s
+  metricRelabelings: [ ]
+  #  - action: replace
+  #    regex: quickwit-(.*)
+  #    replacement: $1
+  #    sourceLabels: [cluster]
+  #    targetLabel: qw_cluster
+  #  - action: labeldrop
+  #    regex: (endpoint|cluster)
+  relabelings: [ ]
+  #  - sourceLabels: [__meta_kubernetes_pod_node_name]
+  #    targetLabel: instance
+
+# Prometheus Operator alertmanager alerts
+prometheusRule:
+  enabled: false
+  # -- Additional labels to add to PrometheusRule resources
+  additionalLabels: { }
+  rules: [ ]
+  #  - alert: Example
+  #    expr: metric == 1
+  #    for: 1m
+  #    labels:
+  #      severity: warning
+
+service:
+  # Service type configuration default for all Quickwit services
+  type: ClusterIP
